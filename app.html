@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BionX Notes - Offline Çok Fonksiyonlu Not Defteri</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+
+        /* THEMES */
+        :root {
+            --theme-primary: #00FF88;
+            --theme-secondary: #FF00FF;
+            --theme-background: #0A0E27;
+            --theme-surface: #1A1F3A;
+            --theme-text: #00FF88;
+            --theme-text-light: #FF00FF;
+            --theme-border: #00FF88;
+            --theme-accent: #FFB703;
+            --transition-speed: 0.3s;
+        }
+
+        body.theme-soft-pink {
+            --theme-primary: #FF69B4; --theme-secondary: #FFB6D9; --theme-background: #FFF5FA;
+            --theme-surface: #FFFFFF; --theme-text: #2C2C2C; --theme-text-light: #666666;
+            --theme-border: #FFD9E8; --theme-accent: #FF1493;
+        }
+
+        body.theme-dark {
+            --theme-primary: #3B82F6; --theme-secondary: #4B5563; --theme-background: #0F172A;
+            --theme-surface: #1E293B; --theme-text: #F1F5F9; --theme-text-light: #CBD5E1;
+            --theme-border: #334155; --theme-accent: #60A5FA;
+        }
+
+        body.theme-minimalist {
+            --theme-primary: #333333; --theme-secondary: #CCCCCC; --theme-background: #FFFFFF;
+            --theme-surface: #F5F5F5; --theme-text: #000000; --theme-text-light: #666666;
+            --theme-border: #E0E0E0; --theme-accent: #999999;
+        }
+
+        body { background-color: var(--theme-background); color: var(--theme-text); transition: all var(--transition-speed); }
+
+        .container { display: flex; height: 100vh; flex-direction: column; }
+
+        /* HEADER */
+        .header {
+            display: flex; align-items: center; padding: 16px 20px; background-color: var(--theme-surface);
+            border-bottom: 2px solid var(--theme-border); gap: 15px; transition: all var(--transition-speed);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.1); position: relative; z-index: 100;
+        }
+
+        .hamburger-btn {
+            background: none; border: none; cursor: pointer; font-size: 24px; color: var(--theme-primary);
+            display: flex; flex-direction: column; gap: 5px; width: 30px; height: 30px;
+            justify-content: center; align-items: center; transition: all var(--transition-speed);
+        }
+
+        .hamburger-btn:hover { transform: scale(1.1); text-shadow: 0 0 10px var(--theme-primary); }
+
+        .hamburger-btn span {
+            width: 25px; height: 3px; background-color: var(--theme-primary); border-radius: 2px;
+            transition: all var(--transition-speed); display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(8px, 8px); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(7px, -7px); }
+
+        .header h1 { font-size: 24px; font-weight: 700; flex: 1; letter-spacing: 1px; }
+
+        /* MAIN CONTENT */
+        .main-content { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+        .overlay {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); z-index: 98; transition: all var(--transition-speed);
+        }
+
+        .overlay.active { display: block; }
+
+        /* SIDEBAR PANEL */
+        .sidebar-panel {
+            position: fixed; top: 0; left: -300px; width: 280px; height: 100vh;
+            background-color: var(--theme-surface); border-right: 2px solid var(--theme-border);
+            z-index: 99; transition: left var(--transition-speed); overflow-y: auto;
+            display: flex; flex-direction: column;
+        }
+
+        .sidebar-panel.active { left: 0; box-shadow: 5px 0 30px rgba(0, 255, 136, 0.2); }
+
+        .panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px; border-bottom: 2px solid var(--theme-border);
+        }
+
+        .panel-close-btn {
+            background: none; border: none; cursor: pointer; font-size: 24px;
+            color: var(--theme-primary); transition: all var(--transition-speed);
+        }
+
+        .panel-close-btn:hover { transform: scale(1.2); }
+
+        .panel-buttons {
+            display: flex; flex-direction: column; gap: 8px; padding: 16px;
+            border-bottom: 2px solid var(--theme-border);
+        }
+
+        .panel-btn {
+            padding: 12px 16px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: transparent; color: var(--theme-primary); font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all var(--transition-speed); text-align: left;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .panel-btn:hover {
+            background-color: var(--theme-primary); color: var(--theme-background);
+            box-shadow: 0 0 15px var(--theme-primary);
+        }
+
+        .panel-btn.active {
+            background-color: var(--theme-primary); color: var(--theme-background);
+            box-shadow: 0 0 20px var(--theme-primary);
+        }
+
+        .panel-content {
+            flex: 1; padding: 16px; overflow-y: auto; display: flex;
+            flex-direction: column; gap: 12px;
+        }
+
+        .new-note-btn {
+            padding: 12px 16px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: var(--theme-primary); color: var(--theme-background);
+            font-size: 14px; font-weight: 600; cursor: pointer; transition: all var(--transition-speed);
+            width: 100%;
+        }
+
+        .new-note-btn:hover { box-shadow: 0 0 20px var(--theme-primary); transform: translateY(-2px); }
+
+        /* NOTES LIST */
+        .note-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .note-item {
+            padding: 12px; background-color: var(--theme-surface); border: 2px solid var(--theme-border);
+            border-radius: 8px; cursor: pointer; transition: all var(--transition-speed);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+
+        .note-item:hover { border-color: var(--theme-secondary); box-shadow: 0 0 15px var(--theme-primary); }
+
+        .note-item.active {
+            background-color: rgba(0, 255, 136, 0.1); border-color: var(--theme-primary);
+            box-shadow: 0 0 20px var(--theme-primary);
+        }
+
+        .note-item-content { flex: 1; overflow: hidden; }
+
+        .note-item-title { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .note-item-date { font-size: 11px; color: var(--theme-text-light); margin-top: 3px; }
+
+        .note-item-delete {
+            background-color: #FF3333; width: 24px; height: 24px; border: none; border-radius: 50%;
+            color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: all var(--transition-speed); font-size: 14px;
+        }
+
+        .note-item-delete:hover { box-shadow: 0 0 15px #FF3333; }
+
+        /* EDITOR VIEW */
+        .editor-view {
+            flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 16px;
+            overflow-y: auto; background-color: var(--theme-background);
+        }
+
+        .editor-field { display: flex; flex-direction: column; gap: 8px; }
+
+        .editor-field label {
+            font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--theme-text); opacity: 0.9;
+        }
+
+        #noteTitle {
+            font-size: 20px; font-weight: 700; padding: 16px; border: 2px solid var(--theme-border);
+            border-radius: 8px; background-color: var(--theme-surface); color: var(--theme-text);
+        }
+
+        #noteTitle:focus { outline: none; border-color: var(--theme-primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+
+        #noteContent {
+            flex: 1; padding: 16px; border: 2px solid var(--theme-border); border-radius: 8px;
+            font-size: 15px; line-height: 1.6; resize: none; background-color: var(--theme-surface);
+            color: var(--theme-text); font-family: inherit;
+        }
+
+        #noteContent:focus { outline: none; border-color: var(--theme-primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); }
+
+        .editor-toolbar {
+            display: flex; gap: 8px; padding: 12px; background-color: var(--theme-surface);
+            border-radius: 8px; border: 2px solid var(--theme-border); flex-wrap: wrap;
+        }
+
+        .format-btn {
+            width: 36px; height: 36px; padding: 0; border-radius: 6px; border: 2px solid var(--theme-primary);
+            background-color: transparent; color: var(--theme-primary); display: flex;
+            justify-content: center; align-items: center; cursor: pointer; transition: all var(--transition-speed);
+            font-size: 14px; font-weight: 600;
+        }
+
+        .format-btn:hover { background-color: var(--theme-primary); color: var(--theme-background); }
+
+        .format-btn.active {
+            background-color: var(--theme-secondary); color: var(--theme-background);
+            border-color: var(--theme-secondary); box-shadow: 0 0 10px var(--theme-secondary);
+        }
+
+        #lineHeightSelect { padding: 6px; border: 2px solid var(--theme-border); border-radius: 6px; background-color: var(--theme-surface); color: var(--theme-text); }
+
+        .save-btn {
+            padding: 12px 24px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: var(--theme-primary); color: var(--theme-background); font-weight: 600;
+            margin-top: auto; cursor: pointer; transition: all var(--transition-speed);
+        }
+
+        .save-btn:hover { box-shadow: 0 0 20px var(--theme-primary); }
+
+        /* TIMER VIEW */
+        .timer-view {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 40px; padding: 40px 20px; background-color: var(--theme-background);
+        }
+
+        .timer-display-large {
+            font-size: 80px; font-weight: 700; color: var(--theme-primary); font-family: 'Courier New', monospace;
+            letter-spacing: 4px; text-shadow: 0 0 20px var(--theme-primary); animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+
+        .timer-controls {
+            display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 16px 32px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: transparent; color: var(--theme-primary); font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all var(--transition-speed); min-width: 120px;
+        }
+
+        .timer-btn:hover {
+            background-color: var(--theme-primary); color: var(--theme-background);
+            box-shadow: 0 0 20px var(--theme-primary);
+        }
+
+        /* DASHBOARD VIEW */
+        .dashboard-view {
+            flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 20px;
+            overflow-y: auto; background-color: var(--theme-background);
+        }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+        }
+
+        .stat-card {
+            background-color: var(--theme-surface); border: 2px solid var(--theme-border);
+            border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            transition: all var(--transition-speed);
+        }
+
+        .stat-card:hover { box-shadow: 0 0 25px rgba(0, 255, 136, 0.2); }
+
+        .stat-label { font-size: 12px; color: var(--theme-text-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--theme-primary); text-shadow: 0 0 10px var(--theme-primary); }
+
+        /* SETTINGS VIEW */
+        .settings-view {
+            flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 20px;
+            overflow-y: auto; background-color: var(--theme-background);
+        }
+
+        .settings-group {
+            background-color: var(--theme-surface); border: 2px solid var(--theme-border);
+            border-radius: 12px; padding: 16px;
+        }
+
+        .settings-group-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; color: var(--theme-text); }
+
+        .theme-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+        .theme-option {
+            padding: 12px; border: 2px solid var(--theme-border); border-radius: 8px;
+            background-color: transparent; color: var(--theme-text); cursor: pointer;
+            transition: all var(--transition-speed); text-align: center; font-weight: 600; font-size: 12px;
+        }
+
+        .theme-option:hover { box-shadow: 0 0 15px var(--theme-primary); }
+
+        .theme-option.active {
+            background-color: var(--theme-primary); border-color: var(--theme-primary);
+            color: var(--theme-background); box-shadow: 0 0 20px var(--theme-primary);
+        }
+
+        .settings-button {
+            padding: 12px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: transparent; color: var(--theme-primary); cursor: pointer;
+            font-weight: 600; transition: all var(--transition-speed); width: 100%; margin-top: 8px;
+        }
+
+        .settings-button:hover { background-color: var(--theme-primary); color: var(--theme-background); }
+
+        .settings-button.danger {
+            border-color: #FF3333; color: #FF3333;
+        }
+
+        .settings-button.danger:hover { background-color: #FF3333; color: white; }
+
+        .info-box {
+            background-color: rgba(0, 255, 136, 0.05); border: 1px solid var(--theme-border);
+            border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.6;
+        }
+
+        h2 { font-size: 20px; color: var(--theme-text); }
+
+        /* TASKS VIEW */
+        .tasks-view {
+            flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 20px;
+            overflow-y: auto; background-color: var(--theme-background);
+        }
+
+        .tasks-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            gap: 12px; flex-wrap: wrap;
+        }
+
+        .tasks-subtitle {
+            margin-top: 4px; color: var(--theme-text-light); font-size: 13px;
+        }
+
+        .task-clear-btn {
+            padding: 10px 12px; border: 2px solid var(--theme-border); border-radius: 8px;
+            background-color: transparent; color: var(--theme-text); cursor: pointer;
+            font-weight: 600; transition: all var(--transition-speed);
+        }
+
+        .task-clear-btn:hover {
+            border-color: #FF3333; color: #FF3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.25);
+        }
+
+        .task-input-group {
+            display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px;
+        }
+
+        #taskInput, #taskDueInput, #taskPrioritySelect {
+            width: 100%; padding: 12px; border: 2px solid var(--theme-border); border-radius: 8px;
+            background-color: var(--theme-surface); color: var(--theme-text); font-family: inherit;
+        }
+
+        #taskInput:focus, #taskDueInput:focus, #taskPrioritySelect:focus {
+            outline: none; border-color: var(--theme-primary); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+
+        #addTaskBtn {
+            padding: 12px 20px; border: 2px solid var(--theme-primary); border-radius: 8px;
+            background-color: var(--theme-primary); color: var(--theme-background); font-weight: 600;
+            cursor: pointer; transition: all var(--transition-speed); min-width: 110px;
+        }
+
+        #addTaskBtn:hover { box-shadow: 0 0 20px var(--theme-primary); transform: translateY(-1px); }
+
+        .task-extra-row {
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+        }
+
+        .task-field {
+            display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .task-field span {
+            color: var(--theme-text-light); font-size: 11px; font-weight: 700;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+
+        .task-filter-row {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+
+        .task-filter-btn {
+            padding: 10px 12px; border: 2px solid var(--theme-border); border-radius: 999px;
+            background-color: transparent; color: var(--theme-text); cursor: pointer;
+            font-weight: 700; transition: all var(--transition-speed);
+        }
+
+        .task-filter-btn:hover, .task-filter-btn.active {
+            background-color: var(--theme-primary); border-color: var(--theme-primary);
+            color: var(--theme-background); box-shadow: 0 0 15px var(--theme-primary);
+        }
+
+        .task-section { display: flex; flex-direction: column; gap: 10px; }
+
+        .task-section-title {
+            display: flex; align-items: center; justify-content: space-between;
+            color: var(--theme-text-light); font-size: 12px; font-weight: 800;
+            letter-spacing: 0.7px; text-transform: uppercase;
+        }
+
+        .tasks-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .task-item {
+            display: flex; align-items: flex-start; gap: 12px; padding: 12px;
+            background-color: var(--theme-surface); border: 2px solid var(--theme-border);
+            border-left-width: 5px; border-radius: 8px; transition: all var(--transition-speed);
+        }
+
+        .task-item:hover { box-shadow: 0 0 15px var(--theme-primary); }
+
+        .task-item.priority-high { border-left-color: #FF3333; }
+        .task-item.priority-normal { border-left-color: var(--theme-primary); }
+        .task-item.priority-low { border-left-color: var(--theme-accent); }
+
+        .task-item.completed { opacity: 0.62; border-color: var(--theme-accent); }
+        .task-item.completed .task-text { text-decoration: line-through; }
+
+        .task-checkbox {
+            width: 24px; height: 24px; cursor: pointer; border: 2px solid var(--theme-primary);
+            border-radius: 6px; background-color: transparent; transition: all var(--transition-speed);
+            appearance: none; display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
+        }
+
+        .task-checkbox:checked { background-color: var(--theme-primary); }
+        .task-checkbox:checked::after { content: "✓"; color: var(--theme-background); font-weight: 900; }
+
+        .task-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+
+        .task-text {
+            background: none; border: none; color: var(--theme-text); cursor: pointer;
+            font-size: 15px; font-weight: 650; font-family: inherit; line-height: 1.35;
+            padding: 0; text-align: left; overflow-wrap: anywhere;
+        }
+
+        .task-meta {
+            display: flex; flex-wrap: wrap; gap: 6px; color: var(--theme-text-light); font-size: 11px;
+        }
+
+        .task-pill {
+            border: 1px solid var(--theme-border); border-radius: 999px; padding: 3px 8px;
+            background-color: rgba(0, 255, 136, 0.04);
+        }
+
+        .task-pill.overdue { border-color: #FF3333; color: #FF3333; }
+
+        .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+        .task-edit, .task-delete {
+            border: none; color: white; width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all var(--transition-speed); font-size: 13px;
+        }
+
+        .task-edit { background-color: var(--theme-primary); color: var(--theme-background); }
+        .task-edit:hover { box-shadow: 0 0 15px var(--theme-primary); }
+        .task-delete { background-color: #FF3333; }
+        .task-delete:hover { box-shadow: 0 0 15px #FF3333; }
+
+        .tasks-empty {
+            text-align: center; padding: 34px 20px; opacity: 0.68;
+            border: 2px dashed var(--theme-border); border-radius: 8px;
+        }
+
+        .language-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 12px; }
+
+        .lang-option {
+            padding: 12px; border: 2px solid var(--theme-border); border-radius: 8px;
+            background-color: transparent; color: var(--theme-text); cursor: pointer;
+            transition: all var(--transition-speed); text-align: center; font-weight: 600; font-size: 12px;
+        }
+
+        .lang-option:hover { box-shadow: 0 0 15px var(--theme-primary); }
+
+        .lang-option.active {
+            background-color: var(--theme-primary); border-color: var(--theme-primary);
+            color: var(--theme-background); box-shadow: 0 0 20px var(--theme-primary);
+        }
+
+        @media (max-width: 640px) {
+            .tasks-header { flex-direction: column; }
+            .task-clear-btn { width: 100%; }
+            .task-input-group { grid-template-columns: 1fr; }
+            .task-extra-row { grid-template-columns: 1fr; }
+            .task-actions { flex-direction: column; }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .timer-display-large { font-size: 60px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .theme-selector { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .header { padding: 12px; }
+            .editor-view, .timer-view, .dashboard-view, .settings-view, .tasks-view { padding: 12px; gap: 12px; }
+            .timer-display-large { font-size: 48px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .timer-controls { gap: 8px; }
+            .timer-btn { padding: 12px 16px; min-width: auto; font-size: 14px; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--theme-background); }
+        ::-webkit-scrollbar-thumb { background: var(--theme-border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--theme-primary); box-shadow: 0 0 10px var(--theme-primary); }
+    </style>
+</head>
+<body class="theme-f1-baku">
+    <div class="container">
+        <div class="header">
+            <button class="hamburger-btn" id="hamburgerBtn">
+                <span></span><span></span><span></span>
+            </button>
+            <h1 id="appTitle">⚡ BionX Notes</h1>
+        </div>
+
+        <div class="main-content">
+            <div class="overlay" id="overlay"></div>
+
+            <!-- SIDEBAR PANEL -->
+            <div class="sidebar-panel" id="sidebarPanel">
+                <div class="panel-header">
+                    <span></span>
+                    <button class="panel-close-btn" id="panelCloseBtn">✕</button>
+                </div>
+
+                <div class="panel-buttons">
+                    <button class="panel-btn active" data-view="notes" id="notesLabel">📝 Notlar</button>
+                    <button class="panel-btn" data-view="tasks" id="tasksLabel">✅ Görevler</button>
+                    <button class="panel-btn" data-view="timer" id="timerLabel">⏱️ Zamanlayıcı</button>
+                    <button class="panel-btn" data-view="dashboard" id="dashboardLabel">📊 Dashboard</button>
+                    <button class="panel-btn" data-view="settings" id="settingsLabel">⚙️ Ayarlar</button>
+                </div>
+
+                <div class="panel-content">
+                    <button class="new-note-btn" id="newNoteBtn">➕ Yeni Not</button>
+                    <div class="note-list" id="noteList"></div>
+                </div>
+            </div>
+
+            <!-- NOTES VIEW -->
+            <div class="editor-view" id="notesView">
+                <div class="editor-field">
+                    <label for="noteTitle" id="noteTitleLabel">Not Başlığı</label>
+                    <input type="text" id="noteTitle" placeholder="Başlık yazın...">
+                </div>
+
+                <div class="editor-field">
+                    <label id="formatLabel">Metin Biçimi</label>
+                    <div class="editor-toolbar">
+                        <button class="format-btn" id="boldBtn" title="Kalın"><strong>B</strong></button>
+                        <button class="format-btn" id="italicBtn" title="İtalik"><em>I</em></button>
+                        <button class="format-btn" id="leftAlignBtn" title="Sola Yasla">⬅️</button>
+                        <button class="format-btn" id="centerAlignBtn" title="Ortala">↔️</button>
+                        <button class="format-btn" id="rightAlignBtn" title="Sağa Yasla">➡️</button>
+                        <select id="lineHeightSelect">
+                            <option value="1">Dar (1.0)</option>
+                            <option value="1.5" selected>Normal (1.5)</option>
+                            <option value="2">Geniş (2.0)</option>
+                            <option value="2.5">Çok Geniş (2.5)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="editor-field">
+                    <label for="noteContent" id="noteContentLabel">Not İçeriği</label>
+                    <textarea id="noteContent" placeholder="Not yazın..."></textarea>
+                </div>
+
+                <button id="saveNoteBtn" class="save-btn">💾 Kaydet</button>
+            </div>
+
+            <!-- TASKS VIEW -->
+            <div class="tasks-view" id="tasksView" style="display: none;">
+                <div class="tasks-header">
+                    <div>
+                        <h2 id="tasksTitle">✅ Görevlerim</h2>
+                        <div class="tasks-subtitle" id="tasksSubtitle">0 açık görev</div>
+                    </div>
+                    <button class="task-clear-btn" id="clearCompletedTasksBtn">Tamamlananları temizle</button>
+                </div>
+
+                <div class="task-input-group">
+                    <input type="text" id="taskInput" placeholder="Yeni görev ekle...">
+                    <button id="addTaskBtn">➕ Ekle</button>
+                </div>
+
+                <div class="task-extra-row">
+                    <label class="task-field">
+                        <span id="taskDueLabel">Tarih</span>
+                        <input type="date" id="taskDueInput">
+                    </label>
+                    <label class="task-field">
+                        <span id="taskPriorityLabel">Öncelik</span>
+                        <select id="taskPrioritySelect">
+                            <option value="normal">Normal</option>
+                            <option value="high">Yüksek</option>
+                            <option value="low">Düşük</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="task-filter-row">
+                    <button class="task-filter-btn active" data-filter="all" id="taskFilterAll">Tümü</button>
+                    <button class="task-filter-btn" data-filter="active" id="taskFilterActive">Aktif</button>
+                    <button class="task-filter-btn" data-filter="completed" id="taskFilterCompleted">Tamamlanan</button>
+                </div>
+
+                <div class="task-section" id="activeTaskSection">
+                    <div class="task-section-title" id="activeTasksLabel">Aktif</div>
+                    <div class="tasks-list" id="activeTasksList"></div>
+                </div>
+
+                <div class="task-section" id="completedTaskSection">
+                    <div class="task-section-title" id="completedTasksLabel">Tamamlananlar</div>
+                    <div class="tasks-list" id="completedTasksList"></div>
+                </div>
+
+                <div class="tasks-empty" id="tasksEmpty">Henüz görev yok</div>
+            </div>
+
+            <!-- TIMER VIEW -->
+            <div class="timer-view" id="timerView" style="display: none;">
+                <div class="timer-display-large" id="timerDisplay">00:00:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn" id="timerStartBtn">▶️ Başlat</button>
+                    <button class="timer-btn" id="timerStopBtn">⏸️ Duraklat</button>
+                    <button class="timer-btn" id="timerResetBtn">🔄 Sıfırla</button>
+                    <button class="timer-btn" style="background-color: var(--theme-primary); color: var(--theme-background);" id="timerSaveBtn">💾 Kaydet</button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD VIEW -->
+            <div class="dashboard-view" id="dashboardView" style="display: none;">
+                <h2 id="dashboardTitle">📊 Çalışma İstatistikleri</h2>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label" id="totalStudyLabel">Toplam Çalışma</div><div class="stat-value" id="totalStudyTime">0s</div></div>
+                    <div class="stat-card"><div class="stat-label" id="sessionsLabel">Oturum Sayısı</div><div class="stat-value" id="totalSessions">0</div></div>
+                    <div class="stat-card"><div class="stat-label" id="todayStudyLabel">Bugün Çalışılan</div><div class="stat-value" id="todayStudyTime">0s</div></div>
+                    <div class="stat-card"><div class="stat-label" id="avgSessionLabel">Ortalama Oturum</div><div class="stat-value" id="avgSessionTime">0s</div></div>
+                </div>
+                <div class="settings-group">
+                    <div class="settings-group-title" id="recentActivitiesLabel">Son Aktiviteler</div>
+                    <div id="activityList" style="font-size: 13px; line-height: 1.8;"></div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div class="settings-view" id="settingsView" style="display: none;">
+                <h2 id="settingsTitle">⚙️ Ayarlar</h2>
+                
+                <div class="settings-group">
+                    <div class="settings-group-title" id="themeSettingLabel">🎨 Tema Seç</div>
+                    <div class="theme-selector">
+                        <div class="theme-option active" data-theme="f1-baku">⚡ F1 Baku</div>
+                        <div class="theme-option" data-theme="soft-pink">🌸 Soft Pink</div>
+                        <div class="theme-option" data-theme="dark">🖤 Dark</div>
+                        <div class="theme-option" data-theme="minimalist">⚪ Minimal</div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" id="languageSettingLabel">🌍 Dil Seç</div>
+                    <div class="language-selector">
+                        <div class="lang-option active" data-lang="tr">🇹🇷 Türkçe</div>
+                        <div class="lang-option" data-lang="en">🇬🇧 English</div>
+                        <div class="lang-option" data-lang="ru">🇷🇺 Русский</div>
+                        <div class="lang-option" data-lang="az">🇦🇿 Azərbaycanca</div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" id="dataManagementLabel">💾 Veri Yönetimi</div>
+                    <button class="settings-button" id="exportBtn">📥 Verileri İndir</button>
+                    <button class="settings-button danger" id="clearBtn">🗑️ Tüm Verileri Sil</button>
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-group-title" id="aboutLabel">ℹ️ Hakkında</div>
+                    <div class="info-box" id="aboutInfo">
+                        <strong>BionX Notes v1.0</strong><br><br>
+                        ✅ Tamamen Offline<br>
+                        🔐 Tüm veriler yerel hafızada<br>
+                        ⚡ Hiçbir sunucu bağlantısı<br>
+                        💯 Tam Gizlilik<br><br>
+                        Made with Azerbaijan in 2026
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const Html = {
+            escape(value) {
+                return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[char]));
+            }
+        };
+
+        const I18n = {
+            current: 'tr',
+            messages: {
+                tr: {
+                    locale: 'tr-TR',
+                    documentTitle: 'BionX Notes - Offline Çok Fonksiyonlu Not Defteri',
+                    appTitle: '⚡ BionX Notes',
+                    notesNav: '📝 Notlar',
+                    tasksNav: '✅ Görevler',
+                    timerNav: '⏱️ Zamanlayıcı',
+                    dashboardNav: '📊 Dashboard',
+                    settingsNav: '⚙️ Ayarlar',
+                    newNote: '➕ Yeni Not',
+                    noteTitleLabel: 'Not Başlığı',
+                    noteTitlePlaceholder: 'Başlık yazın...',
+                    formatLabel: 'Metin Biçimi',
+                    boldTitle: 'Kalın',
+                    italicTitle: 'İtalik',
+                    leftTitle: 'Sola yasla',
+                    centerTitle: 'Ortala',
+                    rightTitle: 'Sağa yasla',
+                    lineCompact: 'Dar (1.0)',
+                    lineNormal: 'Normal (1.5)',
+                    lineWide: 'Geniş (2.0)',
+                    lineExtraWide: 'Çok geniş (2.5)',
+                    noteContentLabel: 'Not İçeriği',
+                    noteContentPlaceholder: 'Not yazın...',
+                    saveNote: '💾 Kaydet',
+                    newNoteTitle: 'Yeni Not',
+                    untitledNote: 'Başlıksız',
+                    noteSaved: '✅ Not kaydedildi!',
+                    deleteNoteConfirm: 'Not silinsin mi?',
+                    tasksTitle: '✅ Görevlerim',
+                    tasksSubtitle: '{count} açık görev',
+                    taskInputPlaceholder: 'Yeni görev ekle...',
+                    addTask: '➕ Ekle',
+                    taskDueLabel: 'Tarih',
+                    taskNoDue: 'Tarih yok',
+                    taskPriorityLabel: 'Öncelik',
+                    priorityNormal: 'Normal',
+                    priorityHigh: 'Yüksek',
+                    priorityLow: 'Düşük',
+                    filterAll: 'Tümü',
+                    filterActive: 'Aktif',
+                    filterDone: 'Tamamlanan',
+                    activeTasks: 'Aktif',
+                    completedTasks: 'Tamamlananlar',
+                    clearCompleted: 'Tamamlananları temizle',
+                    tasksEmpty: 'Henüz görev yok',
+                    activeTasksEmpty: 'Açık görev yok',
+                    completedTasksEmpty: 'Tamamlanan görev yok',
+                    editTaskTitle: 'Görevi düzenle',
+                    editTaskPrompt: 'Görev metnini düzenle:',
+                    deleteTaskConfirm: 'Görev silinsin mi?',
+                    clearCompletedConfirm: 'Tamamlanan görevler silinsin mi?',
+                    duePrefix: 'Tarih',
+                    createdPrefix: 'Oluşturuldu',
+                    overdue: 'Gecikti',
+                    timerStart: '▶️ Başlat',
+                    timerStop: '⏸️ Duraklat',
+                    timerReset: '🔄 Sıfırla',
+                    timerSave: '💾 Kaydet',
+                    timerRunning: '⏸️ Çalışıyor...',
+                    timerSaved: '✅ {time} kaydedildi!',
+                    dashboardTitle: '📊 Çalışma İstatistikleri',
+                    totalStudy: 'Toplam Çalışma',
+                    sessionCount: 'Oturum Sayısı',
+                    todayStudy: 'Bugün Çalışılan',
+                    avgSession: 'Ortalama Oturum',
+                    recentActivities: 'Son Aktiviteler',
+                    noActivity: 'Aktivite yok',
+                    settingsTitle: '⚙️ Ayarlar',
+                    themeSelect: '🎨 Tema Seç',
+                    themeF1: '⚡ F1 Baku',
+                    themePink: '🌸 Soft Pink',
+                    themeDark: '🖤 Koyu',
+                    themeMinimal: '⚪ Minimal',
+                    languageSelect: '🌍 Dil Seç',
+                    dataManagement: '💾 Veri Yönetimi',
+                    exportData: '📥 Verileri İndir',
+                    clearData: '🗑️ Tüm Verileri Sil',
+                    aboutTitle: 'ℹ️ Hakkında',
+                    aboutHtml: '<strong>BionX Notes v1.0</strong><br><br>✅ Tamamen Offline<br>🔐 Tüm veriler yerel hafızada<br>⚡ Hiçbir sunucu bağlantısı yok<br>💯 Tam Gizlilik<br><br>Made with Azerbaijan in 2026',
+                    clearAllConfirm: '❌ TÜM VERİLER SİLİNECEK. Emin misiniz?',
+                    exportFile: 'bionx_notes',
+                    timeHour: 's',
+                    timeMinute: 'd'
+                },
+                en: {
+                    locale: 'en-US',
+                    documentTitle: 'BionX Notes - Offline Multifunction Notes',
+                    appTitle: '⚡ BionX Notes',
+                    notesNav: '📝 Notes',
+                    tasksNav: '✅ Tasks',
+                    timerNav: '⏱️ Timer',
+                    dashboardNav: '📊 Dashboard',
+                    settingsNav: '⚙️ Settings',
+                    newNote: '➕ New Note',
+                    noteTitleLabel: 'Note Title',
+                    noteTitlePlaceholder: 'Write a title...',
+                    formatLabel: 'Text Format',
+                    boldTitle: 'Bold',
+                    italicTitle: 'Italic',
+                    leftTitle: 'Align left',
+                    centerTitle: 'Center',
+                    rightTitle: 'Align right',
+                    lineCompact: 'Compact (1.0)',
+                    lineNormal: 'Normal (1.5)',
+                    lineWide: 'Wide (2.0)',
+                    lineExtraWide: 'Extra wide (2.5)',
+                    noteContentLabel: 'Note Content',
+                    noteContentPlaceholder: 'Write a note...',
+                    saveNote: '💾 Save',
+                    newNoteTitle: 'New Note',
+                    untitledNote: 'Untitled',
+                    noteSaved: '✅ Note saved!',
+                    deleteNoteConfirm: 'Delete this note?',
+                    tasksTitle: '✅ My Tasks',
+                    tasksSubtitle: '{count} open tasks',
+                    taskInputPlaceholder: 'Add a new task...',
+                    addTask: '➕ Add',
+                    taskDueLabel: 'Date',
+                    taskNoDue: 'No date',
+                    taskPriorityLabel: 'Priority',
+                    priorityNormal: 'Normal',
+                    priorityHigh: 'High',
+                    priorityLow: 'Low',
+                    filterAll: 'All',
+                    filterActive: 'Active',
+                    filterDone: 'Done',
+                    activeTasks: 'Active',
+                    completedTasks: 'Completed',
+                    clearCompleted: 'Clear completed',
+                    tasksEmpty: 'No tasks yet',
+                    activeTasksEmpty: 'No open tasks',
+                    completedTasksEmpty: 'No completed tasks',
+                    editTaskTitle: 'Edit task',
+                    editTaskPrompt: 'Edit task text:',
+                    deleteTaskConfirm: 'Delete this task?',
+                    clearCompletedConfirm: 'Delete completed tasks?',
+                    duePrefix: 'Date',
+                    createdPrefix: 'Created',
+                    overdue: 'Overdue',
+                    timerStart: '▶️ Start',
+                    timerStop: '⏸️ Pause',
+                    timerReset: '🔄 Reset',
+                    timerSave: '💾 Save',
+                    timerRunning: '⏸️ Running...',
+                    timerSaved: '✅ {time} saved!',
+                    dashboardTitle: '📊 Study Statistics',
+                    totalStudy: 'Total Study',
+                    sessionCount: 'Sessions',
+                    todayStudy: 'Today',
+                    avgSession: 'Average Session',
+                    recentActivities: 'Recent Activities',
+                    noActivity: 'No activity',
+                    settingsTitle: '⚙️ Settings',
+                    themeSelect: '🎨 Choose Theme',
+                    themeF1: '⚡ F1 Baku',
+                    themePink: '🌸 Soft Pink',
+                    themeDark: '🖤 Dark',
+                    themeMinimal: '⚪ Minimal',
+                    languageSelect: '🌍 Choose Language',
+                    dataManagement: '💾 Data Management',
+                    exportData: '📥 Download Data',
+                    clearData: '🗑️ Delete All Data',
+                    aboutTitle: 'ℹ️ About',
+                    aboutHtml: '<strong>BionX Notes v1.0</strong><br><br>✅ Fully offline<br>🔐 All data stays in local storage<br>⚡ No server connection<br>💯 Complete privacy<br><br>Made with Azerbaijan in 2026',
+                    clearAllConfirm: '❌ ALL DATA WILL BE DELETED. Are you sure?',
+                    exportFile: 'bionx_notes',
+                    timeHour: 'h',
+                    timeMinute: 'm'
+                },
+                ru: {
+                    locale: 'ru-RU',
+                    documentTitle: 'BionX Notes - Офлайн многофункциональные заметки',
+                    appTitle: '⚡ BionX Notes',
+                    notesNav: '📝 Заметки',
+                    tasksNav: '✅ Задачи',
+                    timerNav: '⏱️ Таймер',
+                    dashboardNav: '📊 Статистика',
+                    settingsNav: '⚙️ Настройки',
+                    newNote: '➕ Новая заметка',
+                    noteTitleLabel: 'Название заметки',
+                    noteTitlePlaceholder: 'Введите название...',
+                    formatLabel: 'Формат текста',
+                    boldTitle: 'Жирный',
+                    italicTitle: 'Курсив',
+                    leftTitle: 'По левому краю',
+                    centerTitle: 'По центру',
+                    rightTitle: 'По правому краю',
+                    lineCompact: 'Плотно (1.0)',
+                    lineNormal: 'Обычно (1.5)',
+                    lineWide: 'Широко (2.0)',
+                    lineExtraWide: 'Очень широко (2.5)',
+                    noteContentLabel: 'Текст заметки',
+                    noteContentPlaceholder: 'Напишите заметку...',
+                    saveNote: '💾 Сохранить',
+                    newNoteTitle: 'Новая заметка',
+                    untitledNote: 'Без названия',
+                    noteSaved: '✅ Заметка сохранена!',
+                    deleteNoteConfirm: 'Удалить заметку?',
+                    tasksTitle: '✅ Мои задачи',
+                    tasksSubtitle: 'Открытые задачи: {count}',
+                    taskInputPlaceholder: 'Добавить новую задачу...',
+                    addTask: '➕ Добавить',
+                    taskDueLabel: 'Дата',
+                    taskNoDue: 'Без даты',
+                    taskPriorityLabel: 'Приоритет',
+                    priorityNormal: 'Обычный',
+                    priorityHigh: 'Высокий',
+                    priorityLow: 'Низкий',
+                    filterAll: 'Все',
+                    filterActive: 'Активные',
+                    filterDone: 'Готовые',
+                    activeTasks: 'Активные',
+                    completedTasks: 'Выполненные',
+                    clearCompleted: 'Очистить выполненные',
+                    tasksEmpty: 'Задач пока нет',
+                    activeTasksEmpty: 'Открытых задач нет',
+                    completedTasksEmpty: 'Выполненных задач нет',
+                    editTaskTitle: 'Изменить задачу',
+                    editTaskPrompt: 'Изменить текст задачи:',
+                    deleteTaskConfirm: 'Удалить задачу?',
+                    clearCompletedConfirm: 'Удалить выполненные задачи?',
+                    duePrefix: 'Дата',
+                    createdPrefix: 'Создано',
+                    overdue: 'Просрочено',
+                    timerStart: '▶️ Старт',
+                    timerStop: '⏸️ Пауза',
+                    timerReset: '🔄 Сброс',
+                    timerSave: '💾 Сохранить',
+                    timerRunning: '⏸️ Работает...',
+                    timerSaved: '✅ {time} сохранено!',
+                    dashboardTitle: '📊 Статистика учебы',
+                    totalStudy: 'Всего занятий',
+                    sessionCount: 'Сессии',
+                    todayStudy: 'Сегодня',
+                    avgSession: 'Средняя сессия',
+                    recentActivities: 'Последние активности',
+                    noActivity: 'Активности нет',
+                    settingsTitle: '⚙️ Настройки',
+                    themeSelect: '🎨 Выбрать тему',
+                    themeF1: '⚡ F1 Baku',
+                    themePink: '🌸 Soft Pink',
+                    themeDark: '🖤 Темная',
+                    themeMinimal: '⚪ Минимал',
+                    languageSelect: '🌍 Выбрать язык',
+                    dataManagement: '💾 Управление данными',
+                    exportData: '📥 Скачать данные',
+                    clearData: '🗑️ Удалить все данные',
+                    aboutTitle: 'ℹ️ О приложении',
+                    aboutHtml: '<strong>BionX Notes v1.0</strong><br><br>✅ Полностью офлайн<br>🔐 Все данные в локальном хранилище<br>⚡ Нет подключения к серверу<br>💯 Полная приватность<br><br>Made with Azerbaijan in 2026',
+                    clearAllConfirm: '❌ ВСЕ ДАННЫЕ БУДУТ УДАЛЕНЫ. Вы уверены?',
+                    exportFile: 'bionx_notes',
+                    timeHour: 'ч',
+                    timeMinute: 'м'
+                },
+                az: {
+                    locale: 'az-AZ',
+                    documentTitle: 'BionX Notes - Offline çoxfunksiyalı qeyd dəftəri',
+                    appTitle: '⚡ BionX Notes',
+                    notesNav: '📝 Qeydlər',
+                    tasksNav: '✅ Tapşırıqlar',
+                    timerNav: '⏱️ Taymer',
+                    dashboardNav: '📊 Statistika',
+                    settingsNav: '⚙️ Ayarlar',
+                    newNote: '➕ Yeni qeyd',
+                    noteTitleLabel: 'Qeyd başlığı',
+                    noteTitlePlaceholder: 'Başlıq yazın...',
+                    formatLabel: 'Mətn formatı',
+                    boldTitle: 'Qalın',
+                    italicTitle: 'İtalik',
+                    leftTitle: 'Sola düzlə',
+                    centerTitle: 'Ortala',
+                    rightTitle: 'Sağa düzlə',
+                    lineCompact: 'Dar (1.0)',
+                    lineNormal: 'Normal (1.5)',
+                    lineWide: 'Geniş (2.0)',
+                    lineExtraWide: 'Çox geniş (2.5)',
+                    noteContentLabel: 'Qeyd məzmunu',
+                    noteContentPlaceholder: 'Qeyd yazın...',
+                    saveNote: '💾 Saxla',
+                    newNoteTitle: 'Yeni qeyd',
+                    untitledNote: 'Başlıqsız',
+                    noteSaved: '✅ Qeyd saxlandı!',
+                    deleteNoteConfirm: 'Qeyd silinsin?',
+                    tasksTitle: '✅ Tapşırıqlarım',
+                    tasksSubtitle: '{count} açıq tapşırıq',
+                    taskInputPlaceholder: 'Yeni tapşırıq əlavə et...',
+                    addTask: '➕ Əlavə et',
+                    taskDueLabel: 'Tarix',
+                    taskNoDue: 'Tarix yoxdur',
+                    taskPriorityLabel: 'Prioritet',
+                    priorityNormal: 'Normal',
+                    priorityHigh: 'Yüksək',
+                    priorityLow: 'Aşağı',
+                    filterAll: 'Hamısı',
+                    filterActive: 'Aktiv',
+                    filterDone: 'Tamamlanan',
+                    activeTasks: 'Aktiv',
+                    completedTasks: 'Tamamlananlar',
+                    clearCompleted: 'Tamamlananları təmizlə',
+                    tasksEmpty: 'Hələ tapşırıq yoxdur',
+                    activeTasksEmpty: 'Açıq tapşırıq yoxdur',
+                    completedTasksEmpty: 'Tamamlanan tapşırıq yoxdur',
+                    editTaskTitle: 'Tapşırığı düzəlt',
+                    editTaskPrompt: 'Tapşırıq mətnini düzəlt:',
+                    deleteTaskConfirm: 'Tapşırıq silinsin?',
+                    clearCompletedConfirm: 'Tamamlanan tapşırıqlar silinsin?',
+                    duePrefix: 'Tarix',
+                    createdPrefix: 'Yaradıldı',
+                    overdue: 'Gecikib',
+                    timerStart: '▶️ Başlat',
+                    timerStop: '⏸️ Dayandır',
+                    timerReset: '🔄 Sıfırla',
+                    timerSave: '💾 Saxla',
+                    timerRunning: '⏸️ İşləyir...',
+                    timerSaved: '✅ {time} saxlandı!',
+                    dashboardTitle: '📊 Oxuma statistikası',
+                    totalStudy: 'Ümumi çalışma',
+                    sessionCount: 'Sessiya sayı',
+                    todayStudy: 'Bugünkü çalışma',
+                    avgSession: 'Ortalama sessiya',
+                    recentActivities: 'Son aktivliklər',
+                    noActivity: 'Aktivlik yoxdur',
+                    settingsTitle: '⚙️ Ayarlar',
+                    themeSelect: '🎨 Tema seç',
+                    themeF1: '⚡ F1 Bakı',
+                    themePink: '🌸 Soft Pink',
+                    themeDark: '🖤 Tünd',
+                    themeMinimal: '⚪ Minimal',
+                    languageSelect: '🌍 Dil seç',
+                    dataManagement: '💾 Məlumat idarəsi',
+                    exportData: '📥 Məlumatları indir',
+                    clearData: '🗑️ Bütün məlumatları sil',
+                    aboutTitle: 'ℹ️ Haqqında',
+                    aboutHtml: '<strong>BionX Notes v1.0</strong><br><br>✅ Tam offline<br>🔐 Bütün məlumatlar lokal yaddaşdadır<br>⚡ Server bağlantısı yoxdur<br>💯 Tam məxfilik<br><br>Made with Azerbaijan in 2026',
+                    clearAllConfirm: '❌ BÜTÜN MƏLUMATLAR SİLİNƏCƏK. Əminsiniz?',
+                    exportFile: 'bionx_notes',
+                    timeHour: 's',
+                    timeMinute: 'd'
+                }
+            },
+            t(key, values = {}) {
+                const pack = this.messages[this.current] || this.messages.tr;
+                let text = pack[key] ?? this.messages.tr[key] ?? key;
+                Object.entries(values).forEach(([name, value]) => {
+                    text = text.replaceAll('{' + name + '}', value);
+                });
+                return text;
+            },
+            locale() {
+                return (this.messages[this.current] || this.messages.tr).locale;
+            },
+            setLanguage(lang) {
+                this.current = this.messages[lang] ? lang : 'tr';
+            },
+            apply() {
+                const setText = (id, key) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = this.t(key);
+                };
+                const setHtml = (id, key) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = this.t(key);
+                };
+                const setPlaceholder = (id, key) => {
+                    const el = document.getElementById(id);
+                    if (el) el.placeholder = this.t(key);
+                };
+                const setTitle = (id, key) => {
+                    const el = document.getElementById(id);
+                    if (el) el.title = this.t(key);
+                };
+
+                document.documentElement.lang = this.current;
+                document.title = this.t('documentTitle');
+                setText('appTitle', 'appTitle');
+                setText('notesLabel', 'notesNav');
+                setText('tasksLabel', 'tasksNav');
+                setText('timerLabel', 'timerNav');
+                setText('dashboardLabel', 'dashboardNav');
+                setText('settingsLabel', 'settingsNav');
+                setText('newNoteBtn', 'newNote');
+                setText('noteTitleLabel', 'noteTitleLabel');
+                setPlaceholder('noteTitle', 'noteTitlePlaceholder');
+                setText('formatLabel', 'formatLabel');
+                setTitle('boldBtn', 'boldTitle');
+                setTitle('italicBtn', 'italicTitle');
+                setTitle('leftAlignBtn', 'leftTitle');
+                setTitle('centerAlignBtn', 'centerTitle');
+                setTitle('rightAlignBtn', 'rightTitle');
+                setText('noteContentLabel', 'noteContentLabel');
+                setPlaceholder('noteContent', 'noteContentPlaceholder');
+                setText('saveNoteBtn', 'saveNote');
+                setText('tasksTitle', 'tasksTitle');
+                setPlaceholder('taskInput', 'taskInputPlaceholder');
+                setText('addTaskBtn', 'addTask');
+                setText('taskDueLabel', 'taskDueLabel');
+                setText('taskPriorityLabel', 'taskPriorityLabel');
+                setText('activeTasksLabel', 'activeTasks');
+                setText('completedTasksLabel', 'completedTasks');
+                setText('clearCompletedTasksBtn', 'clearCompleted');
+                setText('timerStopBtn', 'timerStop');
+                setText('timerResetBtn', 'timerReset');
+                setText('timerSaveBtn', 'timerSave');
+                setText('dashboardTitle', 'dashboardTitle');
+                setText('totalStudyLabel', 'totalStudy');
+                setText('sessionsLabel', 'sessionCount');
+                setText('todayStudyLabel', 'todayStudy');
+                setText('avgSessionLabel', 'avgSession');
+                setText('recentActivitiesLabel', 'recentActivities');
+                setText('settingsTitle', 'settingsTitle');
+                setText('themeSettingLabel', 'themeSelect');
+                setText('languageSettingLabel', 'languageSelect');
+                setText('dataManagementLabel', 'dataManagement');
+                setText('exportBtn', 'exportData');
+                setText('clearBtn', 'clearData');
+                setText('aboutLabel', 'aboutTitle');
+                setHtml('aboutInfo', 'aboutHtml');
+
+                const timerStart = document.getElementById('timerStartBtn');
+                if (timerStart) timerStart.textContent = TimerManager.running ? this.t('timerRunning') : this.t('timerStart');
+
+                const lineOptions = {
+                    '1': 'lineCompact',
+                    '1.5': 'lineNormal',
+                    '2': 'lineWide',
+                    '2.5': 'lineExtraWide'
+                };
+                Object.entries(lineOptions).forEach(([value, key]) => {
+                    const option = document.querySelector('#lineHeightSelect option[value="' + value + '"]');
+                    if (option) option.textContent = this.t(key);
+                });
+
+                const priorityOptions = {
+                    normal: 'priorityNormal',
+                    high: 'priorityHigh',
+                    low: 'priorityLow'
+                };
+                Object.entries(priorityOptions).forEach(([value, key]) => {
+                    const option = document.querySelector('#taskPrioritySelect option[value="' + value + '"]');
+                    if (option) option.textContent = this.t(key);
+                });
+
+                const themeLabels = {
+                    'f1-baku': 'themeF1',
+                    'soft-pink': 'themePink',
+                    dark: 'themeDark',
+                    minimalist: 'themeMinimal'
+                };
+                Object.entries(themeLabels).forEach(([value, key]) => {
+                    const option = document.querySelector('.theme-option[data-theme="' + value + '"]');
+                    if (option) option.textContent = this.t(key);
+                });
+
+                document.querySelectorAll('.lang-option').forEach((option) => {
+                    option.classList.toggle('active', option.dataset.lang === this.current);
+                });
+
+                TaskManager.render();
+                UI.updateDashboard();
+            }
+        };
+
+        const StorageManager = {
+            getNotes() { return JSON.parse(localStorage.getItem('notes') || '[]'); },
+            saveNotes(notes) { localStorage.setItem('notes', JSON.stringify(notes)); },
+            getTasks() {
+                try {
+                    return JSON.parse(localStorage.getItem('tasks') || '[]');
+                } catch (error) {
+                    return [];
+                }
+            },
+            saveTasks(tasks) { localStorage.setItem('tasks', JSON.stringify(tasks)); },
+            getTimerStats() { return JSON.parse(localStorage.getItem('timer') || '{"totalSeconds":0,"sessions":[],"daily":{}}'); },
+            saveTimerStats(stats) { localStorage.setItem('timer', JSON.stringify(stats)); },
+            getSettings() {
+                let settings = {};
+                try {
+                    settings = JSON.parse(localStorage.getItem('settings') || '{}');
+                } catch (error) {
+                    settings = {};
+                }
+                return { theme: 'f1-baku', language: 'tr', ...settings };
+            },
+            saveSettings(settings) { localStorage.setItem('settings', JSON.stringify(settings)); },
+            clearAll() {
+                if (confirm(I18n.t('clearAllConfirm'))) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            },
+            exportData() {
+                const data = {
+                    notes: this.getNotes(),
+                    tasks: this.getTasks(),
+                    timer: this.getTimerStats(),
+                    settings: this.getSettings(),
+                    date: new Date().toLocaleString(I18n.locale())
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = I18n.t('exportFile') + '_' + Date.now() + '.json';
+                a.click();
+            }
+        };
+
+                const TimerManager = {
+            elapsed: 0, interval: null, running: false,
+            start() {
+                if (this.running) return;
+                this.running = true;
+                this.interval = setInterval(() => { this.elapsed++; this.display(); }, 1000);
+                document.getElementById('timerStartBtn').textContent = I18n.t('timerRunning');
+            },
+            stop() {
+                if (!this.running) return;
+                this.running = false;
+                clearInterval(this.interval);
+                document.getElementById('timerStartBtn').textContent = I18n.t('timerStart');
+            },
+            reset() { this.stop(); this.elapsed = 0; this.display(); },
+            save() {
+                if (this.elapsed === 0) return;
+                const stats = StorageManager.getTimerStats();
+                stats.totalSeconds += this.elapsed;
+                const today = new Date().toISOString().split('T')[0];
+                stats.daily[today] = (stats.daily[today] || 0) + this.elapsed;
+                stats.sessions.push({ duration: this.elapsed, date: new Date().toLocaleString(I18n.locale()) });
+                StorageManager.saveTimerStats(stats);
+                alert(I18n.t('timerSaved', { time: this.format(this.elapsed) }));
+                this.reset();
+            },
+            display() { document.getElementById('timerDisplay').textContent = this.format(this.elapsed); },
+            format(s) { const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60; return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0'); }
+        };
+
+                const NoteManager = {
+            notes: [], current: null,
+            init() {
+                this.notes = StorageManager.getNotes();
+                if (this.notes.length === 0) this.create();
+                this.load(this.notes[0].id);
+            },
+            create() {
+                const note = {
+                    id: Date.now().toString(),
+                    title: I18n.t('newNoteTitle'),
+                    content: '',
+                    format: { bold: false, italic: false, align: 'left', line: '1.5' },
+                    created: new Date().toLocaleString(I18n.locale()),
+                    updated: new Date().toLocaleString(I18n.locale())
+                };
+                this.notes.unshift(note);
+                StorageManager.saveNotes(this.notes);
+                this.load(note.id);
+                this.list();
+            },
+            load(id) {
+                const note = this.notes.find(n => n.id === id);
+                if (!note) return;
+                this.current = id;
+                document.getElementById('noteTitle').value = note.title;
+                document.getElementById('noteContent').value = note.content;
+                const c = document.getElementById('noteContent');
+                c.style.textAlign = note.format.align;
+                c.style.lineHeight = note.format.line;
+                c.style.fontWeight = note.format.bold ? 'bold' : 'normal';
+                c.style.fontStyle = note.format.italic ? 'italic' : 'normal';
+                document.getElementById('boldBtn').classList.toggle('active', note.format.bold);
+                document.getElementById('italicBtn').classList.toggle('active', note.format.italic);
+                document.querySelectorAll('[id$="AlignBtn"]').forEach(b => b.classList.remove('active'));
+                document.getElementById(note.format.align + 'AlignBtn').classList.add('active');
+                document.getElementById('lineHeightSelect').value = note.format.line;
+                this.list();
+            },
+            save() {
+                const note = this.notes.find(n => n.id === this.current);
+                if (!note) return;
+                note.title = document.getElementById('noteTitle').value || I18n.t('untitledNote');
+                note.content = document.getElementById('noteContent').value;
+                note.updated = new Date().toLocaleString(I18n.locale());
+                StorageManager.saveNotes(this.notes);
+                this.list();
+                alert(I18n.t('noteSaved'));
+            },
+            delete(id) {
+                if (!confirm(I18n.t('deleteNoteConfirm'))) return;
+                this.notes = this.notes.filter(n => n.id !== id);
+                StorageManager.saveNotes(this.notes);
+                if (this.current === id) {
+                    if (this.notes.length) this.load(this.notes[0].id);
+                    else this.create();
+                }
+                this.list();
+            },
+            list() {
+                const container = document.getElementById('noteList');
+                container.innerHTML = '';
+                this.notes.forEach(n => {
+                    const item = document.createElement('div');
+                    item.className = 'note-item ' + (this.current === n.id ? 'active' : '');
+
+                    const content = document.createElement('div');
+                    content.className = 'note-item-content';
+                    content.addEventListener('click', () => NoteManager.load(n.id));
+                    content.innerHTML =
+                        '<div class="note-item-title">' + Html.escape(n.title) + '</div>' +
+                        '<div class="note-item-date">' + Html.escape(n.updated) + '</div>';
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'note-item-delete';
+                    deleteBtn.textContent = '🗑️';
+                    deleteBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        NoteManager.delete(n.id);
+                    });
+
+                    item.appendChild(content);
+                    item.appendChild(deleteBtn);
+                    container.appendChild(item);
+                });
+            }
+        };
+
+        const TaskManager = {
+            tasks: [],
+            filter: 'all',
+            init() {
+                this.tasks = StorageManager.getTasks();
+                this.render();
+            },
+            createFromInput() {
+                const input = document.getElementById('taskInput');
+                const text = input.value.trim();
+                if (!text) {
+                    input.focus();
+                    return;
+                }
+                const dueInput = document.getElementById('taskDueInput');
+                const prioritySelect = document.getElementById('taskPrioritySelect');
+                this.tasks.unshift({
+                    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+                    text,
+                    completed: false,
+                    due: dueInput.value,
+                    priority: prioritySelect.value || 'normal',
+                    created: new Date().toISOString(),
+                    completedAt: null
+                });
+                input.value = '';
+                dueInput.value = '';
+                prioritySelect.value = 'normal';
+                this.save();
+                input.focus();
+            },
+            save() {
+                StorageManager.saveTasks(this.tasks);
+                this.render();
+            },
+            toggle(id) {
+                const task = this.tasks.find(item => item.id === id);
+                if (!task) return;
+                task.completed = !task.completed;
+                task.completedAt = task.completed ? new Date().toISOString() : null;
+                this.save();
+            },
+            edit(id) {
+                const task = this.tasks.find(item => item.id === id);
+                if (!task) return;
+                const nextText = prompt(I18n.t('editTaskPrompt'), task.text);
+                if (nextText === null) return;
+                const trimmed = nextText.trim();
+                if (!trimmed) return;
+                task.text = trimmed;
+                this.save();
+            },
+            delete(id) {
+                if (!confirm(I18n.t('deleteTaskConfirm'))) return;
+                this.tasks = this.tasks.filter(item => item.id !== id);
+                this.save();
+            },
+            clearCompleted() {
+                const hasCompleted = this.tasks.some(item => item.completed);
+                if (!hasCompleted) return;
+                if (!confirm(I18n.t('clearCompletedConfirm'))) return;
+                this.tasks = this.tasks.filter(item => !item.completed);
+                this.save();
+            },
+            setFilter(filter) {
+                this.filter = filter;
+                this.render();
+            },
+            priorityLabel(priority) {
+                const map = { high: 'priorityHigh', low: 'priorityLow', normal: 'priorityNormal' };
+                return I18n.t(map[priority] || 'priorityNormal');
+            },
+            formatDate(value) {
+                if (!value) return I18n.t('taskNoDue');
+                return new Date(value + 'T00:00:00').toLocaleDateString(I18n.locale(), {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            },
+            isOverdue(task) {
+                const today = new Date().toISOString().split('T')[0];
+                return Boolean(task.due && !task.completed && task.due < today);
+            },
+            sortTasks(list) {
+                const priorityRank = { high: 0, normal: 1, low: 2 };
+                return [...list].sort((a, b) => {
+                    if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
+                    if ((a.due || '') !== (b.due || '')) return (a.due || '9999').localeCompare(b.due || '9999');
+                    return (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1);
+                });
+            },
+            renderItem(task, container) {
+                const item = document.createElement('div');
+                item.className = 'task-item priority-' + (task.priority || 'normal') + (task.completed ? ' completed' : '');
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'task-checkbox';
+                checkbox.checked = task.completed;
+                checkbox.addEventListener('change', () => this.toggle(task.id));
+
+                const body = document.createElement('div');
+                body.className = 'task-body';
+
+                const textButton = document.createElement('button');
+                textButton.className = 'task-text';
+                textButton.type = 'button';
+                textButton.title = I18n.t('editTaskTitle');
+                textButton.textContent = task.text;
+                textButton.addEventListener('click', () => this.edit(task.id));
+
+                const meta = document.createElement('div');
+                meta.className = 'task-meta';
+
+                const due = document.createElement('span');
+                due.className = 'task-pill' + (this.isOverdue(task) ? ' overdue' : '');
+                due.textContent = this.isOverdue(task)
+                    ? I18n.t('overdue') + ' · ' + this.formatDate(task.due)
+                    : I18n.t('duePrefix') + ': ' + this.formatDate(task.due);
+
+                const priority = document.createElement('span');
+                priority.className = 'task-pill';
+                priority.textContent = this.priorityLabel(task.priority);
+
+                meta.appendChild(due);
+                meta.appendChild(priority);
+                body.appendChild(textButton);
+                body.appendChild(meta);
+
+                const actions = document.createElement('div');
+                actions.className = 'task-actions';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'task-edit';
+                editBtn.type = 'button';
+                editBtn.title = I18n.t('editTaskTitle');
+                editBtn.textContent = '✎';
+                editBtn.addEventListener('click', () => this.edit(task.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'task-delete';
+                deleteBtn.type = 'button';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.addEventListener('click', () => this.delete(task.id));
+
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+                item.appendChild(checkbox);
+                item.appendChild(body);
+                item.appendChild(actions);
+                container.appendChild(item);
+            },
+            render() {
+                const activeList = document.getElementById('activeTasksList');
+                const completedList = document.getElementById('completedTasksList');
+                if (!activeList || !completedList) return;
+
+                const active = this.sortTasks(this.tasks.filter(task => !task.completed));
+                const completed = this.sortTasks(this.tasks.filter(task => task.completed)).reverse();
+                const activeSection = document.getElementById('activeTaskSection');
+                const completedSection = document.getElementById('completedTaskSection');
+                const empty = document.getElementById('tasksEmpty');
+
+                activeList.innerHTML = '';
+                completedList.innerHTML = '';
+                active.forEach(task => this.renderItem(task, activeList));
+                completed.forEach(task => this.renderItem(task, completedList));
+
+                document.getElementById('tasksSubtitle').textContent = I18n.t('tasksSubtitle', { count: active.length });
+                document.getElementById('taskFilterAll').textContent = I18n.t('filterAll') + ' (' + this.tasks.length + ')';
+                document.getElementById('taskFilterActive').textContent = I18n.t('filterActive') + ' (' + active.length + ')';
+                document.getElementById('taskFilterCompleted').textContent = I18n.t('filterDone') + ' (' + completed.length + ')';
+                document.getElementById('activeTasksLabel').textContent = I18n.t('activeTasks');
+                document.getElementById('completedTasksLabel').textContent = I18n.t('completedTasks');
+
+                document.querySelectorAll('.task-filter-btn').forEach(button => {
+                    button.classList.toggle('active', button.dataset.filter === this.filter);
+                });
+
+                activeSection.style.display = this.filter === 'completed' ? 'none' : 'flex';
+                completedSection.style.display = this.filter === 'active' || completed.length === 0 ? 'none' : 'flex';
+
+                const noTasks = this.tasks.length === 0;
+                const noActive = this.filter === 'active' && active.length === 0;
+                const noCompleted = this.filter === 'completed' && completed.length === 0;
+                const showEmpty = noTasks || noActive || noCompleted;
+
+                empty.style.display = showEmpty ? 'block' : 'none';
+                empty.textContent = noTasks
+                    ? I18n.t('tasksEmpty')
+                    : noActive
+                        ? I18n.t('activeTasksEmpty')
+                        : I18n.t('completedTasksEmpty');
+            }
+        };
+
+                const UI = {
+            togglePanel() {
+                const p = document.getElementById('sidebarPanel');
+                const o = document.getElementById('overlay');
+                const h = document.getElementById('hamburgerBtn');
+                p.classList.toggle('active');
+                o.classList.toggle('active');
+                h.classList.toggle('active');
+            },
+            closePanel() {
+                document.getElementById('sidebarPanel').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+                document.getElementById('hamburgerBtn').classList.remove('active');
+            },
+            switchView(name) {
+                const map = {
+                    notes: 'notesView',
+                    tasks: 'tasksView',
+                    timer: 'timerView',
+                    dashboard: 'dashboardView',
+                    settings: 'settingsView'
+                };
+                const target = map[name] || map.notes;
+                Object.values(map).forEach(id => {
+                    document.getElementById(id).style.display = 'none';
+                });
+                document.getElementById(target).style.display = 'flex';
+                document.querySelectorAll('.panel-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector('[data-view="' + (map[name] ? name : 'notes') + '"]').classList.add('active');
+                if (name === 'dashboard') this.updateDashboard();
+                if (name === 'tasks') TaskManager.render();
+                this.closePanel();
+            },
+            updateDashboard() {
+                const totalStudy = document.getElementById('totalStudyTime');
+                if (!totalStudy) return;
+                const s = StorageManager.getTimerStats();
+                const today = new Date().toISOString().split('T')[0];
+                const fmt = (sec) => {
+                    const h = Math.floor(sec / 3600);
+                    const m = Math.floor((sec % 3600) / 60);
+                    return h ? h + I18n.t('timeHour') + ' ' + m + I18n.t('timeMinute') : m + I18n.t('timeMinute');
+                };
+                totalStudy.textContent = fmt(s.totalSeconds);
+                document.getElementById('totalSessions').textContent = s.sessions.length;
+                document.getElementById('todayStudyTime').textContent = fmt(s.daily[today] || 0);
+                document.getElementById('avgSessionTime').textContent = s.sessions.length ? fmt(Math.floor(s.totalSeconds / s.sessions.length)) : fmt(0);
+                const last = s.sessions.slice(-3).reverse().map(x => '📌 ' + fmt(x.duration) + ' - ' + x.date).join('<br>') || I18n.t('noActivity');
+                document.getElementById('activityList').innerHTML = last;
+            },
+            changeTheme(name) {
+                const theme = document.querySelector('[data-theme="' + name + '"]') ? name : 'f1-baku';
+                document.body.className = 'theme-' + theme;
+                document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+                const activeTheme = document.querySelector('[data-theme="' + theme + '"]');
+                if (activeTheme) activeTheme.classList.add('active');
+                const s = StorageManager.getSettings();
+                s.theme = theme;
+                StorageManager.saveSettings(s);
+            },
+            changeLanguage(lang) {
+                I18n.setLanguage(lang);
+                const s = StorageManager.getSettings();
+                s.language = I18n.current;
+                StorageManager.saveSettings(s);
+                I18n.apply();
+            }
+        };
+
+                document.addEventListener('DOMContentLoaded', () => {
+            const s = StorageManager.getSettings();
+            UI.changeTheme(s.theme);
+            UI.changeLanguage(s.language);
+            NoteManager.init();
+            TaskManager.init();
+
+            document.getElementById('hamburgerBtn').addEventListener('click', () => UI.togglePanel());
+            document.getElementById('panelCloseBtn').addEventListener('click', () => UI.closePanel());
+            document.getElementById('overlay').addEventListener('click', () => UI.closePanel());
+
+            document.querySelectorAll('.panel-btn').forEach(b => b.addEventListener('click', () => UI.switchView(b.dataset.view)));
+            document.getElementById('newNoteBtn').addEventListener('click', () => { NoteManager.create(); UI.switchView('notes'); });
+            document.getElementById('saveNoteBtn').addEventListener('click', () => NoteManager.save());
+
+            document.getElementById('boldBtn').addEventListener('click', () => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.bold = !n.format.bold;
+                document.getElementById('noteContent').style.fontWeight = n.format.bold ? 'bold' : 'normal';
+                document.getElementById('boldBtn').classList.toggle('active');
+            });
+            document.getElementById('italicBtn').addEventListener('click', () => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.italic = !n.format.italic;
+                document.getElementById('noteContent').style.fontStyle = n.format.italic ? 'italic' : 'normal';
+                document.getElementById('italicBtn').classList.toggle('active');
+            });
+            document.getElementById('leftAlignBtn').addEventListener('click', () => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.align = 'left';
+                document.getElementById('noteContent').style.textAlign = 'left';
+                document.querySelectorAll('[id$="AlignBtn"]').forEach(b => b.classList.remove('active'));
+                document.getElementById('leftAlignBtn').classList.add('active');
+            });
+            document.getElementById('centerAlignBtn').addEventListener('click', () => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.align = 'center';
+                document.getElementById('noteContent').style.textAlign = 'center';
+                document.querySelectorAll('[id$="AlignBtn"]').forEach(b => b.classList.remove('active'));
+                document.getElementById('centerAlignBtn').classList.add('active');
+            });
+            document.getElementById('rightAlignBtn').addEventListener('click', () => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.align = 'right';
+                document.getElementById('noteContent').style.textAlign = 'right';
+                document.querySelectorAll('[id$="AlignBtn"]').forEach(b => b.classList.remove('active'));
+                document.getElementById('rightAlignBtn').classList.add('active');
+            });
+            document.getElementById('lineHeightSelect').addEventListener('change', (e) => {
+                const n = NoteManager.notes.find(x => x.id === NoteManager.current);
+                if (!n) return;
+                n.format.line = e.target.value;
+                document.getElementById('noteContent').style.lineHeight = e.target.value;
+            });
+
+            document.getElementById('addTaskBtn').addEventListener('click', () => TaskManager.createFromInput());
+            document.getElementById('taskInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') TaskManager.createFromInput();
+            });
+            document.querySelectorAll('.task-filter-btn').forEach(button => {
+                button.addEventListener('click', () => TaskManager.setFilter(button.dataset.filter));
+            });
+            document.getElementById('clearCompletedTasksBtn').addEventListener('click', () => TaskManager.clearCompleted());
+
+            document.getElementById('timerStartBtn').addEventListener('click', () => TimerManager.start());
+            document.getElementById('timerStopBtn').addEventListener('click', () => TimerManager.stop());
+            document.getElementById('timerResetBtn').addEventListener('click', () => TimerManager.reset());
+            document.getElementById('timerSaveBtn').addEventListener('click', () => TimerManager.save());
+
+            document.querySelectorAll('.theme-option').forEach(o => o.addEventListener('click', () => UI.changeTheme(o.dataset.theme)));
+            document.querySelectorAll('.lang-option').forEach(o => o.addEventListener('click', () => UI.changeLanguage(o.dataset.lang)));
+            document.getElementById('exportBtn').addEventListener('click', () => StorageManager.exportData());
+            document.getElementById('clearBtn').addEventListener('click', () => StorageManager.clearAll());
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') UI.closePanel(); });
+        });
+    
+    </script>
+</body>
+</html>
